@@ -1,0 +1,236 @@
+---
+import { client } from "#/lib/client";
+import type { Model, Media } from "@content-island/api-client";
+
+interface NavigationItem extends Model {
+  label: string;
+  url?: string;
+}
+
+interface HeroData extends Model {
+  name: string;
+  buy: NavigationItem;
+  rent: NavigationItem;
+  backgroundImage: Media;
+}
+
+const heroes = await client.getContentList<HeroData>({
+  contentType: "Hero",
+  includeRelatedContent: true,
+});
+const hero = heroes[0];
+---
+
+<section
+  class="hero"
+  style={`--hero-bg: url('${hero.backgroundImage.url}')`}
+>
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">Premier Real Estate</p>
+    <div class="hero-divider"></div>
+    <h1 class="hero-title">{hero.name}</h1>
+    <div class="hero-actions">
+      <a href={hero.buy.url || "/buy"} class="btn-primary">
+        {hero.buy.label}
+      </a>
+      <a href={hero.rent.url || "/rent"} class="btn-secondary">
+        {hero.rent.label}
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-scroll-indicator" aria-hidden="true">
+    <span class="scroll-line"></span>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    height: 100vh;
+    min-height: 640px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image: var(--hero-bg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    animation: subtle-zoom 25s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      160deg,
+      rgba(8, 15, 26, 0.25) 0%,
+      rgba(8, 15, 26, 0.5) 45%,
+      rgba(8, 15, 26, 0.82) 100%
+    );
+  }
+
+  /* Content */
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    max-width: 860px;
+    padding: 0 2rem;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 400;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin-bottom: 1.25rem;
+    animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .hero-divider {
+    width: 48px;
+    height: 1px;
+    background: var(--color-gold);
+    margin: 0 auto 1.5rem;
+    animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.8rem, 7vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--color-ivory);
+    letter-spacing: 0.02em;
+    margin-bottom: 2.5rem;
+    animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.55s both;
+  }
+
+  /* Buttons */
+  .btn-primary,
+  .btn-secondary {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 1rem 2.8rem;
+    border: 1px solid transparent;
+    transition:
+      background 0.3s ease,
+      color 0.3s ease,
+      border-color 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+  }
+
+  .btn-primary {
+    background: var(--color-gold);
+    color: var(--color-midnight);
+    border-color: var(--color-gold);
+  }
+
+  .btn-primary:hover {
+    background: transparent;
+    color: var(--color-gold);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--color-ivory);
+    border-color: rgba(240, 232, 213, 0.35);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+  }
+
+  /* Scroll indicator */
+  .hero-scroll-indicator {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    animation: fade-up 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.9s both;
+  }
+
+  .scroll-line {
+    display: block;
+    width: 1px;
+    height: 56px;
+    background: linear-gradient(
+      to bottom,
+      var(--color-gold),
+      rgba(201, 168, 76, 0)
+    );
+    margin: 0 auto;
+    animation: scroll-pulse 2.4s ease-in-out infinite;
+  }
+
+  /* Animations */
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(28px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes subtle-zoom {
+    from {
+      transform: scale(1.04);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes scroll-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scaleY(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scaleY(1.15);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .hero-title {
+      font-size: clamp(2.2rem, 10vw, 3.5rem);
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      padding: 0.9rem 2rem;
+    }
+  }
+</style>

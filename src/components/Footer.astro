@@ -1,0 +1,151 @@
+---
+import { client } from "#/lib/client";
+import type { Model } from "@content-island/api-client";
+
+interface NavigationItem extends Model {
+  label: string;
+  url?: string;
+}
+
+interface FooterData extends Model {
+  companyName: NavigationItem;
+  motto: string;
+  copyright: string;
+  linkHome: NavigationItem;
+  linkBuy: NavigationItem;
+  linkRent: NavigationItem;
+  linkContact: NavigationItem;
+}
+
+const footers = await client.getContentList<FooterData>({
+  contentType: "Footer",
+  includeRelatedContent: true,
+});
+const footer = footers[0];
+
+const footerLinks = [
+  footer.linkHome,
+  footer.linkBuy,
+  footer.linkRent,
+  footer.linkContact,
+];
+---
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <p class="company-name">{footer.companyName.label}</p>
+        <p class="motto">{footer.motto}</p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <p class="footer-nav-label">Navigation</p>
+        {
+          footerLinks.map((link) => (
+            <a href={link.url || "#"} class="footer-nav-link">
+              {link.label}
+            </a>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p>{footer.copyright}</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    background: var(--color-midnight);
+    border-top: 1px solid rgba(201, 168, 76, 0.12);
+  }
+
+  .footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 5rem 3rem 2.5rem;
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 4rem;
+    padding-bottom: 3.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(240, 232, 213, 0.06);
+  }
+
+  /* Brand */
+  .company-name {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-ivory);
+    margin-bottom: 0.75rem;
+  }
+
+  .motto {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--color-gold);
+    letter-spacing: 0.04em;
+  }
+
+  /* Nav */
+  .footer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .footer-nav-label {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-nav-link {
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 300;
+    letter-spacing: 0.07em;
+    color: var(--color-ivory-muted);
+    transition: color 0.2s ease;
+  }
+
+  .footer-nav-link:hover {
+    color: var(--color-ivory);
+  }
+
+  /* Bottom */
+  .footer-bottom {
+    text-align: center;
+    font-family: var(--font-body);
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(184, 174, 152, 0.35);
+  }
+
+  @media (max-width: 640px) {
+    .footer-inner {
+      padding: 3.5rem 1.5rem 2rem;
+    }
+
+    .footer-grid {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+  }
+</style>

@@ -1,0 +1,694 @@
+---
+import Layout from "#/layouts/layout.astro";
+import type { Model, Media } from "@content-island/api-client";
+
+interface ExtraFeature extends Model {
+  feature: string;
+}
+
+interface PropertyData extends Model {
+  title: string;
+  slug: string;
+  internalReference: string;
+  shortDescription: string;
+  longDescription: string;
+  zone: string;
+  propertyType: string;
+  builtArea?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  hasPool?: boolean;
+  hasGarden?: boolean;
+  hasAircondition?: boolean;
+  floor?: number;
+  levels?: number;
+  operationType: "Sale" | "Rent";
+  price?: number;
+  featured?: boolean;
+  extraFeatures?: ExtraFeature[];
+  mainImage?: Media;
+  galleryImages?: Media[];
+}
+
+export async function getStaticPaths() {
+  const { client } = await import("#/lib/client");
+  const properties = await client.getContentList<PropertyData>({
+    contentType: "Property",
+  });
+  return properties.map((p) => ({ params: { slug: p.slug } }));
+}
+
+const { slug } = Astro.params;
+const { client } = await import("#/lib/client");
+
+const properties = await client.getContentList<PropertyData>({
+  contentType: "Property",
+  "fields.slug": slug,
+  includeRelatedContent: true,
+});
+
+const property = properties[0];
+
+const formatPrice = (price: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  }).format(price);
+
+const specs = [
+  property.bedrooms != null && {
+    icon: "bed",
+    value: String(property.bedrooms),
+    label: property.bedrooms === 1 ? "Bedroom" : "Bedrooms",
+  },
+  property.bathrooms != null && {
+    icon: "bath",
+    value: String(property.bathrooms),
+    label: property.bathrooms === 1 ? "Bathroom" : "Bathrooms",
+  },
+  property.builtArea != null && {
+    icon: "area",
+    value: `${property.builtArea} m²`,
+    label: "Built Area",
+  },
+  property.floor != null && {
+    icon: "floor",
+    value: property.floor === 0 ? "Ground" : `Floor ${property.floor}`,
+    label: "Floor",
+  },
+  property.zone && {
+    icon: "zone",
+    value: property.zone,
+    label: "Zone",
+  },
+  property.propertyType && {
+    icon: "type",
+    value: property.propertyType,
+    label: "Type",
+  },
+].filter(Boolean) as { icon: string; value: string; label: string }[];
+
+const hasGallery = property.galleryImages && property.galleryImages.length > 0;
+---
+
+<Layout title={property.title}>
+  <!-- ─── Hero ─────────────────────────────────────────── -->
+  <section class="hero">
+    {property.mainImage
+      ? <img
+          src={property.mainImage.url}
+          alt={property.mainImage.name || property.title}
+          class="hero-img"
+        />
+      : <div class="hero-img hero-img--empty" />
+    }
+    <div class="hero-overlay" />
+
+    <div class="hero-top">
+      <a href="/" class="back-link">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.3"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Back to listings
+      </a>
+    </div>
+
+    <div class="hero-bottom">
+      <span class={`badge badge--${property.operationType.toLowerCase()}`}>
+        {property.operationType}
+      </span>
+      <h1 class="hero-title">{property.title}</h1>
+      {property.price && (
+        <p class="hero-price">{formatPrice(property.price)}</p>
+      )}
+    </div>
+  </section>
+
+  <!-- ─── Specs strip ───────────────────────────────────── -->
+  {specs.length > 0 && (
+    <div class="specs-strip">
+      <ul class="specs-list">
+        {specs.map((s) => (
+          <li class="spec-item">
+            <span class="spec-icon" aria-hidden="true">
+              {s.icon === "bed" && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/>
+                  <path d="M2 14h20"/><path d="M2 20h20"/>
+                  <rect x="2" y="4" width="7" height="6" rx="1"/>
+                </svg>
+              )}
+              {s.icon === "bath" && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.683 3 4 3.683 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                </svg>
+              )}
+              {s.icon === "area" && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="1"/>
+                  <path d="M3 9h18M9 21V9"/>
+                </svg>
+              )}
+              {s.icon === "floor" && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 21h18M4 11v10M20 11v10M8 11v4M12 11v4M16 11v4"/>
+                  <path d="M3 7l9-4 9 4"/>
+                </svg>
+              )}
+              {s.icon === "zone" && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              )}
+              {s.icon === "type" && (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+              )}
+            </span>
+            <span class="spec-value">{s.value}</span>
+            <span class="spec-label">{s.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )}
+
+  <!-- ─── Main content ──────────────────────────────────── -->
+  <section class="content-section">
+    <div class="content-grid">
+
+      <!-- Description -->
+      <div class="description-col">
+        <span class="eyebrow">Property</span>
+        <h2 class="section-title">About this property</h2>
+        <div class="gold-rule" />
+        <div class="long-description">
+          {property.longDescription.split("\n\n").map((para) => (
+            <p>{para}</p>
+          ))}
+        </div>
+      </div>
+
+      <!-- Details card -->
+      <aside class="details-col">
+        <div class="details-card">
+          <h3 class="details-card-heading">Key Details</h3>
+
+          <dl class="detail-list">
+            <div class="detail-row">
+              <dt>Reference</dt>
+              <dd>{property.internalReference}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Zone</dt>
+              <dd>{property.zone}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Type</dt>
+              <dd>{property.propertyType}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Operation</dt>
+              <dd>{property.operationType}</dd>
+            </div>
+            {property.levels != null && (
+              <div class="detail-row">
+                <dt>Levels</dt>
+                <dd>{property.levels}</dd>
+              </div>
+            )}
+          </dl>
+
+          {property.extraFeatures && property.extraFeatures.length > 0 && (
+            <div class="amenities-block">
+              <h4 class="amenities-heading">Amenities</h4>
+              <ul class="amenities-list">
+                {property.extraFeatures.map((f) => (
+                  <li>
+                    <span class="dot" aria-hidden="true" />
+                    {f.feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {property.price && (
+            <div class="price-block">
+              <span class="price-label">
+                {property.operationType === "Rent" ? "Monthly rent" : "Asking price"}
+              </span>
+              <span class="price-amount">{formatPrice(property.price)}</span>
+            </div>
+          )}
+        </div>
+      </aside>
+
+    </div>
+  </section>
+
+  <!-- ─── Gallery ──────────────────────────────────────── -->
+  {hasGallery && (
+    <section class="gallery-section">
+      <div class="gallery-header">
+        <span class="eyebrow" style="text-align:center;display:block">Visual tour</span>
+        <h2 class="section-title" style="text-align:center">All Photos</h2>
+        <div class="gold-rule" style="margin:1rem auto 0" />
+      </div>
+      <div class="gallery-grid">
+        {property.galleryImages!.map((img) => (
+          <div class="gallery-item">
+            <img src={img.url} alt={img.name || property.title} loading="lazy" />
+          </div>
+        ))}
+      </div>
+    </section>
+  )}
+</Layout>
+
+<style>
+  /* ─── Hero ─────────────────────────────────────────────── */
+  .hero {
+    position: relative;
+    height: 75vh;
+    min-height: 500px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .hero-img--empty {
+    background: #0d1b2a;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to top,
+      rgba(8, 15, 26, 0.95) 0%,
+      rgba(8, 15, 26, 0.4) 55%,
+      rgba(8, 15, 26, 0.25) 100%
+    );
+  }
+
+  .hero-top {
+    position: relative;
+    z-index: 10;
+    padding: 7rem 3rem 0;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(240, 232, 213, 0.65);
+    transition: color 0.2s ease;
+  }
+
+  .back-link:hover {
+    color: var(--color-gold);
+  }
+
+  .hero-bottom {
+    position: relative;
+    z-index: 10;
+    padding: 0 3rem 3.5rem;
+    animation: fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 0.28rem 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .badge--sale {
+    background: var(--color-gold);
+    color: var(--color-midnight);
+  }
+
+  .badge--rent {
+    background: transparent;
+    border: 1px solid var(--color-gold);
+    color: var(--color-gold);
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    color: var(--color-ivory);
+    max-width: 820px;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero-price {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+    font-weight: 300;
+    color: var(--color-gold);
+    letter-spacing: 0.04em;
+  }
+
+  /* ─── Specs strip ──────────────────────────────────────── */
+  .specs-strip {
+    background: var(--color-midnight);
+    border-top: 1px solid rgba(201, 168, 76, 0.2);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.2);
+  }
+
+  .specs-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .spec-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1.75rem 1.5rem;
+    flex: 1;
+    min-width: 110px;
+    text-align: center;
+    border-right: 1px solid rgba(240, 232, 213, 0.07);
+  }
+
+  .spec-item:last-child {
+    border-right: none;
+  }
+
+  .spec-icon {
+    color: var(--color-gold);
+    display: flex;
+    margin-bottom: 0.2rem;
+  }
+
+  .spec-value {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--color-ivory);
+    letter-spacing: 0.02em;
+  }
+
+  .spec-label {
+    font-family: var(--font-body);
+    font-size: 0.6rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ivory-muted);
+  }
+
+  /* ─── Content section ──────────────────────────────────── */
+  .content-section {
+    padding: 6rem 0 5rem;
+  }
+
+  .content-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 3rem;
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 5rem;
+    align-items: start;
+  }
+
+  /* Shared heading bits */
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.67rem;
+    font-weight: 400;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 300;
+    color: var(--color-ivory);
+    letter-spacing: 0.03em;
+    margin-bottom: 0.9rem;
+  }
+
+  .gold-rule {
+    width: 40px;
+    height: 1px;
+    background: var(--color-gold);
+    margin-bottom: 2rem;
+  }
+
+  /* Description */
+  .long-description {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+
+  .long-description p {
+    font-family: var(--font-body);
+    font-size: 0.93rem;
+    font-weight: 300;
+    line-height: 1.9;
+    color: var(--color-ivory-muted);
+  }
+
+  /* Details card */
+  .details-card {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(201, 168, 76, 0.15);
+    padding: 2rem 1.75rem;
+    position: sticky;
+    top: 6rem;
+  }
+
+  .details-card-heading {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--color-ivory);
+    letter-spacing: 0.04em;
+    padding-bottom: 1.1rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+  }
+
+  .detail-list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(240, 232, 213, 0.05);
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-row dt {
+    font-family: var(--font-body);
+    font-size: 0.68rem;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-ivory-muted);
+    flex-shrink: 0;
+  }
+
+  .detail-row dd {
+    font-family: var(--font-body);
+    font-size: 0.83rem;
+    font-weight: 300;
+    color: var(--color-ivory);
+    text-align: right;
+  }
+
+  /* Amenities */
+  .amenities-block {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(201, 168, 76, 0.1);
+  }
+
+  .amenities-heading {
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    margin-bottom: 0.85rem;
+  }
+
+  .amenities-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .amenities-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 300;
+    color: var(--color-ivory-muted);
+  }
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-gold);
+    flex-shrink: 0;
+  }
+
+  /* Price */
+  .price-block {
+    margin-top: 1.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(201, 168, 76, 0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .price-label {
+    font-family: var(--font-body);
+    font-size: 0.64rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ivory-muted);
+  }
+
+  .price-amount {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--color-gold);
+    letter-spacing: 0.03em;
+  }
+
+  /* ─── Gallery ───────────────────────────────────────────── */
+  .gallery-section {
+    padding: 0 3rem 6rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .gallery-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .gallery-item {
+    overflow: hidden;
+    aspect-ratio: 4 / 3;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+
+  .gallery-item:hover img {
+    transform: scale(1.06);
+  }
+
+  /* ─── Animation ────────────────────────────────────────── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── Responsive ───────────────────────────────────────── */
+  @media (max-width: 1024px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+
+    .details-card {
+      position: static;
+    }
+
+    .gallery-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .hero-top  { padding: 6.5rem 1.5rem 0; }
+    .hero-bottom { padding: 0 1.5rem 2.5rem; }
+
+    .specs-list { padding: 0; }
+    .spec-item  { padding: 1.25rem 0.75rem; min-width: 80px; }
+
+    .content-grid  { padding: 0 1.5rem; }
+    .gallery-section { padding: 0 1.5rem 4rem; }
+    .gallery-grid  { grid-template-columns: 1fr; }
+  }
+</style>
