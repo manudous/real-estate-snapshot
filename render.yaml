@@ -2,7 +2,8 @@ services:
   - type: web
     name: real-estate-snapshot
     runtime: static
-    buildCommand: npm ci && npx content-island export && npm run build
+    # el export del snapshot lo lanza el hook `prebuild` de package.json antes de `astro build`
+    buildCommand: npm ci && npm run build
     staticPublishPath: ./dist
     envVars:
       - key: CONTENT_ISLAND_ACCESS_TOKEN
