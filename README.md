@@ -54,26 +54,23 @@ npm run preview
 
 > El snapshot (`content-island-snapshot.json`) está en `.gitignore`: se regenera en cada build.
 
-## Despliegue en Render
+## Despliegue en GitHub Pages (automático)
 
-El repo incluye un `render.yaml` (Blueprint) con un **Static Site** que ejecuta export + build:
+El deploy es automático vía GitHub Actions (`.github/workflows/deploy.yml`): en cada push a `main`
+se ejecuta `npm run build` (que con el hook `prebuild` exporta el snapshot y luego hace `astro build`)
+y se publica `dist/` en GitHub Pages.
 
-```yaml
-buildCommand: npm ci && npx content-island export && npm run build
-staticPublishPath: ./dist
-```
+URL publicada: **https://manudous.github.io/real-estate-snapshot/**
 
-Pasos:
+Configuración (solo una vez):
 
-1. En Render: **New → Blueprint** y selecciona este repositorio (detecta `render.yaml`).
-   *(Alternativa: **New → Static Site**, con Build Command `npm ci && npx content-island export && npm run build` y Publish Directory `dist`.)*
-2. **Añade el token de Content Island como variable de entorno** (este es el sitio donde va el token):
-   **Dashboard del servicio → Environment → Add Environment Variable**
-   - **Key:** `CONTENT_ISLAND_ACCESS_TOKEN`
+1. **Repo público** (Pages gratis necesita repo público).
+2. **Settings → Secrets and variables → Actions → New repository secret**:
+   - **Name:** `CONTENT_ISLAND_ACCESS_TOKEN`
    - **Value:** tu token de lectura
-
-   El `buildCommand` lo usa en el paso `content-island export`.
-3. **Create**. Render hará el primer deploy (export + build en modo snapshot) y publicará `dist/`.
-4. Cada push a `main` dispara un nuevo deploy automáticamente (auto-deploy de Render).
+   El `prebuild` lo usa para exportar el snapshot durante el build.
+3. **Settings → Pages → Source: GitHub Actions**.
+4. La ruta base está fijada en `astro.config.mjs` (`base: "/real-estate-snapshot/"`) porque es una
+   *project page* servida en subcarpeta. Los enlaces internos usan `import.meta.env.BASE_URL`.
 
 > El token debe ser de **lectura**. Un token con prefijo `PREVIEW_` exporta la vista *preview*; cualquier otro, la *published*.
