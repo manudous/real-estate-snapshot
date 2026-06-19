@@ -56,9 +56,11 @@ npm run preview
 
 ## Despliegue en GitHub Pages (automático)
 
-El deploy es automático vía GitHub Actions (`.github/workflows/deploy.yml`): en cada push a `main`
-se ejecuta `npm run build` (que con el hook `prebuild` exporta el snapshot y luego hace `astro build`)
-y se publica `dist/` en GitHub Pages.
+El deploy es automático vía GitHub Actions (`.github/workflows/deploy.yml`). En cada push a `main`:
+
+1. **Export** (con el token secreto) → genera `content-island-snapshot.json` en el runner. **Fichero efímero: no se sube al repo** (está en `.gitignore`).
+2. **Build sin token** → `npm run build` en modo snapshot. Como el build no tiene credenciales, no puede llamar a la API: lee del snapshot del paso anterior. Es la prueba de que el contenido sale del fichero.
+3. Publica `dist/` en GitHub Pages.
 
 URL publicada: **https://manudous.github.io/real-estate-snapshot/**
 
@@ -68,7 +70,7 @@ Configuración (solo una vez):
 2. **Settings → Secrets and variables → Actions → New repository secret**:
    - **Name:** `CONTENT_ISLAND_ACCESS_TOKEN`
    - **Value:** tu token de lectura
-   El `prebuild` lo usa para exportar el snapshot durante el build.
+   Solo lo usa el paso de **export**; el build corre sin él.
 3. **Settings → Pages → Source: GitHub Actions**.
 4. La ruta base está fijada en `astro.config.mjs` (`base: "/real-estate-snapshot/"`) porque es una
    *project page* servida en subcarpeta. Los enlaces internos usan `import.meta.env.BASE_URL`.
