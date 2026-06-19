@@ -6,10 +6,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "export-snapshot": "content-island export",
     "astro": "astro"
   },
   "dependencies": {
-    "@content-island/api-client": "^0.17.0",
+    "@content-island/api-client": "^0.23.0",
     "astro": "^5.18.1"
   },
   "devDependencies": {
