@@ -4,7 +4,6 @@ services:
     runtime: static
     buildCommand: npm ci && npx content-island export && npm run build
     staticPublishPath: ./dist
-    autoDeploy: false # los deploys los dispara la GitHub Action vía deploy hook
     envVars:
       - key: CONTENT_ISLAND_ACCESS_TOKEN
         sync: false # se rellena en el dashboard de Render (secreto)
