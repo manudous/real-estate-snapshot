@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "content-island export",
     "build": "astro build",
     "preview": "astro preview",
     "export-snapshot": "content-island export",
