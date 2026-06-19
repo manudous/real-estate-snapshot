@@ -3,6 +3,9 @@ dist/
 
 # generated content snapshot (re-generated at build time)
 content-island-snapshot.json
+
+# source property data (excel + imágenes), no se versiona
+property-data/
 # generated types
 .astro/
 
