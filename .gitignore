@@ -1,5 +1,8 @@
 # build output
 dist/
+
+# generated content snapshot (re-generated at build time)
+content-island-snapshot.json
 # generated types
 .astro/
 
