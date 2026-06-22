@@ -1,5 +1,11 @@
 # build output
 dist/
+
+# content snapshot: se genera en cada build (CI o local), NO se versiona
+content-island-snapshot.json
+
+# source property data (excel + imágenes), no se versiona
+property-data/
 # generated types
 .astro/
 

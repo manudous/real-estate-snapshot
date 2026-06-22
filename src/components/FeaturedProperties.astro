@@ -38,7 +38,7 @@ const formatPrice = (price: number) =>
           {properties.map((property) => (
             <article class="property-card">
               <a
-                href={`/properties/${property.slug}`}
+                href={`${import.meta.env.BASE_URL}properties/${property.slug}`}
                 class="card-image-link"
                 aria-label={`View ${property.title}`}
               >
@@ -63,7 +63,7 @@ const formatPrice = (price: number) =>
                   <p class="card-price">{formatPrice(property.price)}</p>
                 )}
                 <a
-                  href={`/properties/${property.slug}`}
+                  href={`${import.meta.env.BASE_URL}properties/${property.slug}`}
                   class="card-cta"
                 >
                   View Property

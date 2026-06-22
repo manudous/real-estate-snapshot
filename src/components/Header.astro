@@ -26,7 +26,7 @@ const navLinks = [header.home, header.buy, header.rent, header.getInTouch];
 
 <header class="site-header" id="site-header">
   <div class="header-inner">
-    <a href={header.companyName.url || "/"} class="logo">
+    <a href={header.companyName.url || import.meta.env.BASE_URL} class="logo">
       {header.companyName.label}
     </a>
 
